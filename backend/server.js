@@ -10,6 +10,21 @@ const path = require("path");
 const app = express();
 const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI;
+const SESSION_SECRET = process.env.SESSION_SECRET;
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+
+if (!SESSION_SECRET || SESSION_SECRET.length < 32) {
+  console.error("啟動失敗：SESSION_SECRET 必須設定，且至少需要 32 個字元。");
+  process.exit(1);
+}
+
+if (
+  !ADMIN_PASSWORD ||
+  ADMIN_PASSWORD.trim().toLowerCase() === "change_me"
+) {
+  console.error("啟動失敗：ADMIN_PASSWORD 不可為空，也不可使用 change_me。");
+  process.exit(1);
+}
 
 const userSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
@@ -36,7 +51,7 @@ app.use(express.urlencoded({ extended: false, limit: "20kb" }));
 
 app.use(
   session({
-    secret: process.env.SESSION_SECRET,
+    secret: SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     store: MongoStore.create({
@@ -141,7 +156,7 @@ async function startServer() {
   const existingUser = await User.findOne({ username });
 
   if (!existingUser) {
-    const passwordHash = await bcrypt.hash(process.env.ADMIN_PASSWORD, 12);
+    const passwordHash = await bcrypt.hash(ADMIN_PASSWORD, 12);
     await User.create({ username, passwordHash });
     console.log("管理員帳號已建立。");
   }
