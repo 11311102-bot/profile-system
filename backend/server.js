@@ -9,9 +9,27 @@ const path = require("path");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const MONGO_URI = process.env.MONGO_URI;
+const MONGO_HOST = process.env.MONGO_HOST || "mongodb";
+const MONGO_PORT = process.env.MONGO_PORT || "27017";
+const MONGO_DB = process.env.MONGO_DB || "profiledb";
+const MONGO_APP_USER = process.env.MONGO_APP_USER;
+const MONGO_APP_PASSWORD = process.env.MONGO_APP_PASSWORD;
+
+if (!MONGO_APP_USER || !MONGO_APP_PASSWORD) {
+  console.error("啟動失敗：MongoDB 應用程式帳號與密碼不可為空。");
+  process.exit(1);
+}
+
+const MONGO_URI = `mongodb://${encodeURIComponent(MONGO_APP_USER)}:${encodeURIComponent(MONGO_APP_PASSWORD)}@${MONGO_HOST}:${MONGO_PORT}/${MONGO_DB}?authSource=${encodeURIComponent(MONGO_DB)}`;
 const SESSION_SECRET = process.env.SESSION_SECRET;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+const ADMIN_USERNAME = String(process.env.ADMIN_USERNAME || "").trim();
+
+if (!ADMIN_USERNAME || ADMIN_USERNAME.toLowerCase() === "change_me") {
+  console.error("啟動失敗：ADMIN_USERNAME 不可為空，也不可使用 change_me。");
+  process.exit(1);
+}
+
 
 if (!SESSION_SECRET || SESSION_SECRET.length < 32) {
   console.error("啟動失敗：SESSION_SECRET 必須設定，且至少需要 32 個字元。");
@@ -152,14 +170,36 @@ app.use((error, req, res, next) => {
 async function startServer() {
   await mongoose.connect(MONGO_URI);
 
-  const username = process.env.ADMIN_USERNAME;
-  const existingUser = await User.findOne({ username });
+  let admin = await User.findOne({ username: ADMIN_USERNAME });
 
-  if (!existingUser) {
-    const passwordHash = await bcrypt.hash(ADMIN_PASSWORD, 12);
-    await User.create({ username, passwordHash });
-    console.log("管理員帳號已建立。");
+  if (!admin) {
+    admin = await User.findOne();
   }
+
+  if (!admin) {
+    admin = await User.create({
+      username: ADMIN_USERNAME,
+      passwordHash: await bcrypt.hash(ADMIN_PASSWORD, 12)
+    });
+    console.log("管理員帳號已建立。");
+  } else {
+    const usernameChanged = admin.username !== ADMIN_USERNAME;
+    const passwordChanged = !(
+      await bcrypt.compare(ADMIN_PASSWORD, admin.passwordHash)
+    );
+
+    if (usernameChanged) admin.username = ADMIN_USERNAME;
+    if (passwordChanged) {
+      admin.passwordHash = await bcrypt.hash(ADMIN_PASSWORD, 12);
+    }
+
+    if (usernameChanged || passwordChanged) {
+      await admin.save();
+      console.log("管理員帳號或密碼已更新。");
+    }
+  }
+
+  await User.deleteMany({ _id: { $ne: admin._id } });
 
   if (!(await Profile.findOne())) {
     await Profile.create({});
