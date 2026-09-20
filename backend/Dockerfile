@@ -3,7 +3,7 @@ FROM node:22-alpine
 WORKDIR /app
 
 COPY backend/package*.json ./
-RUN npm install --omit=dev
+RUN npm ci --omit=dev
 
 COPY backend/server.js ./
 COPY public ./public
