@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>管理個人資料</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">Profile Admin</div>
+    <a class="nav-link" href="/">返回個人頁面</a>
+  </header>
+
+  <main class="page">
+    <section id="loginSection" class="form-card">
+      <p class="label">ADMIN LOGIN</p>
+      <h1>管理員登入</h1>
+
+      <form id="loginForm">
+        <label for="username">帳號</label>
+        <input id="username" name="username" autocomplete="username" required>
+
+        <label for="password">密碼</label>
+        <input id="password" name="password" type="password"
+               autocomplete="current-password" required>
+
+        <button type="submit">登入</button>
+      </form>
+
+      <p id="loginMessage" class="message"></p>
+    </section>
+
+    <section id="editSection" class="form-card hidden">
+      <div class="form-heading">
+        <div>
+          <p class="label">EDIT PROFILE</p>
+          <h1>編輯個人資料</h1>
+        </div>
+        <button id="logoutButton" class="secondary" type="button">登出</button>
+      </div>
+
+      <form id="profileForm">
+        <label for="name">姓名</label>
+        <input id="name" name="name" maxlength="100" required>
+
+        <label for="studentId">學號</label>
+        <input id="studentId" name="studentId" maxlength="50">
+
+        <label for="department">科系</label>
+        <input id="department" name="department" maxlength="100">
+
+        <label for="email">電子郵件</label>
+        <input id="email" name="email" type="email" maxlength="150">
+
+        <label for="bio">關於我</label>
+        <textarea id="bio" name="bio" rows="6" maxlength="500"></textarea>
+
+        <button type="submit">儲存資料</button>
+      </form>
+
+      <p id="saveMessage" class="message"></p>
+    </section>
+  </main>
+
+  <script src="/admin.js"></script>
+</body>
+</html>

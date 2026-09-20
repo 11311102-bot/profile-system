@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>個人資料 | Profile</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">My Profile</div>
+    <a class="nav-link" href="/login.html">管理資料</a>
+  </header>
+
+  <main class="page">
+    <section class="profile-card">
+      <div class="avatar" aria-hidden="true">Z</div>
+
+      <div class="profile-content">
+        <p class="label">PERSONAL PROFILE</p>
+        <h1 id="name">載入中……</h1>
+        <p id="department" class="department"></p>
+
+        <div class="details">
+          <div>
+            <span>學號</span>
+            <strong id="studentId">—</strong>
+          </div>
+          <div>
+            <span>電子郵件</span>
+            <strong id="email">—</strong>
+          </div>
+        </div>
+
+        <div class="about">
+          <h2>關於我</h2>
+          <p id="bio"></p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>Ubuntu Server · Docker · Node.js · MongoDB</footer>
+  <script src="/profile.js"></script>
+</body>
+</html>
