@@ -27,11 +27,11 @@
 
 ```mermaid
 flowchart TD
-    A[Windows 瀏覽器] -->|HTTP 3000| B[Node.js 與 Express 容器]
+    A[Windows 瀏覽器] -->|HTTP 127.0.0.1:3001 經 SSH 通道| F[Ubuntu Server]
     B -->|Mongoose 27017| C[MongoDB 容器]
     C --> D[(Docker Volume)]
-    E[Windows PowerShell] -->|SSH 金鑰 2222| F[Ubuntu Server]
-    F --> B
+    E[Windows PowerShell] -->|SSH 連接埠 2222 與金鑰驗證| F
+    F -->|127.0.0.1:3000| B[Node.js 與 Express 容器]
 ```
 
 ## 專案結構

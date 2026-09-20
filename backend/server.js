@@ -63,7 +63,7 @@ const profileSchema = new mongoose.Schema(
 const User = mongoose.model("User", userSchema);
 const Profile = mongoose.model("Profile", profileSchema);
 
-app.use(helmet());
+app.use(helmet({ contentSecurityPolicy: { directives: { upgradeInsecureRequests: null } } }));
 app.use(express.json({ limit: "20kb" }));
 app.use(express.urlencoded({ extended: false, limit: "20kb" }));
 
@@ -115,8 +115,9 @@ app.get("/api/session", (req, res) => {
 });
 
 app.post("/api/login", loginLimiter, async (req, res) => {
-  const username = String(req.body.username || "").trim();
-  const password = String(req.body.password || "");
+  const body = req.body || {};
+  const username = String(body.username || "").trim();
+  const password = String(body.password || "");
 
   const user = await User.findOne({ username });
   if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
@@ -144,10 +145,11 @@ app.post("/api/logout", (req, res) => {
 app.put("/api/profile", requireLogin, async (req, res) => {
   const fields = ["name", "studentId", "department", "email", "bio"];
   const updates = {};
+  const body = req.body || {};
 
   for (const field of fields) {
-    if (typeof req.body[field] === "string") {
-      updates[field] = req.body[field].trim().slice(0, 500);
+    if (typeof body[field] === "string") {
+      updates[field] = body[field].trim().slice(0, 500);
     }
   }
 
