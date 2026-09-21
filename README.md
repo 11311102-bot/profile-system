@@ -56,23 +56,52 @@ profile-system/
 
 ## 啟動方式
 
-1. 建立 `.env` 並設定必要的環境變數。
-2. 建立並啟動服務：
+1. 建立非敏感帳號設定：
+
+```bash
+cp .env.example .env
+nano .env
+```
+
+`.env` 只存放 MongoDB 與管理員的帳號名稱，不存放密碼。
+
+2. 建立 secret 檔案：
+
+```bash
+install -d -m 700 secrets
+openssl rand -base64 32 > secrets/mongo_root_password
+openssl rand -base64 32 > secrets/mongo_app_password
+openssl rand -hex 32 > secrets/session_secret
+read -s -p "請輸入管理員密碼：" ADMIN_PASSWORD_INPUT; echo
+printf '%s' "$ADMIN_PASSWORD_INPUT" > secrets/admin_password
+unset ADMIN_PASSWORD_INPUT
+chmod 644 secrets/*
+```
+
+`secrets/` 已加入 `.gitignore`，不得將其中的內容提交至 Git。
+
+3. 建立並啟動服務：
 
 ```bash
 docker compose up -d --build
 ```
 
-3. 檢查容器狀態：
+4. 檢查容器狀態：
 
 ```bash
 docker compose ps
 ```
 
-4. 開啟網站：
+5. 在 Windows PowerShell 建立 SSH 通道：
+
+```powershell
+ssh -p 2222 -L 3001:127.0.0.1:3000 zhaoyu@127.0.0.1
+```
+
+保持 PowerShell 連線開啟，並在 Windows 瀏覽器開啟：
 
 ```text
-http://127.0.0.1:3000
+http://127.0.0.1:3001
 ```
 
 ## 安全設定
@@ -80,9 +109,13 @@ http://127.0.0.1:3000
 - SSH 僅允許公開金鑰驗證
 - 禁止 SSH 密碼登入及 root 登入
 - UFW 預設拒絕傳入連線
-- `.env` 不會提交至 Git
-- 管理員密碼使用雜湊方式儲存
+- `.env` 只存放非敏感帳號名稱
+- 密碼及 Session Secret 使用 Docker Compose secrets 掛載
+- `secrets/` 不會提交至 Git，也不會加入 Docker 映像
+- 管理員密碼使用 bcrypt 雜湊方式儲存
+- MongoDB 應用程式帳號僅具有 `profiledb` 的 `readWrite` 權限
 - MongoDB 未直接對外開放連接埠
+- 網站僅綁定 Ubuntu 本機的 `127.0.0.1:3000`
 - Express 使用 Helmet、Session 與登入速率限制
 
 ## 停止服務
@@ -94,6 +127,7 @@ docker compose down
 ## 作者
 
 童兆瑜
+
 ## 部署與網路安全
 
 本專案採用單體式架構，由 Express 同時提供 `public/` 靜態前端檔案與 `/api` 後端 API，因此前端與後端不分成兩個獨立服務。

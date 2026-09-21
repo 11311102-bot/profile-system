@@ -6,25 +6,41 @@ const MongoStore = require("connect-mongo");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const path = require("path");
+const fs = require("fs");
 
+function readSecret(filePath, environmentName) {
+  try {
+    return fs.readFileSync(filePath, "utf8").trim();
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+    return process.env[environmentName] || "";
+  }
+}
 const app = express();
 const PORT = process.env.PORT || 3000;
 const MONGO_HOST = process.env.MONGO_HOST || "mongodb";
 const MONGO_PORT = process.env.MONGO_PORT || "27017";
 const MONGO_DB = process.env.MONGO_DB || "profiledb";
 const MONGO_APP_USER = process.env.MONGO_APP_USER;
-const MONGO_APP_PASSWORD = process.env.MONGO_APP_PASSWORD;
-
+const MONGO_APP_PASSWORD = readSecret(
+  process.env.MONGO_APP_PASSWORD_FILE || "/run/secrets/mongo_app_password",
+  "MONGO_APP_PASSWORD"
+);
 if (!MONGO_APP_USER || !MONGO_APP_PASSWORD) {
   console.error("啟動失敗：MongoDB 應用程式帳號與密碼不可為空。");
   process.exit(1);
 }
 
 const MONGO_URI = `mongodb://${encodeURIComponent(MONGO_APP_USER)}:${encodeURIComponent(MONGO_APP_PASSWORD)}@${MONGO_HOST}:${MONGO_PORT}/${MONGO_DB}?authSource=${encodeURIComponent(MONGO_DB)}`;
-const SESSION_SECRET = process.env.SESSION_SECRET;
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+const SESSION_SECRET = readSecret(
+  process.env.SESSION_SECRET_FILE || "/run/secrets/session_secret",
+  "SESSION_SECRET"
+);
+const ADMIN_PASSWORD = readSecret(
+  process.env.ADMIN_PASSWORD_FILE || "/run/secrets/admin_password",
+  "ADMIN_PASSWORD"
+);
 const ADMIN_USERNAME = String(process.env.ADMIN_USERNAME || "").trim();
-
 if (!ADMIN_USERNAME || ADMIN_USERNAME.toLowerCase() === "change_me") {
   console.error("啟動失敗：ADMIN_USERNAME 不可為空，也不可使用 change_me。");
   process.exit(1);
